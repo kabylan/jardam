@@ -12,10 +12,20 @@ $(document).ready(function(){
         width: window.screen.availWidth + 'px'
     });
 
+    var timerId = setTimeout(function tick(){
+
+        timerId = setTimeout(tick, 30*1000);
+
+        getAndShowHelpNeeds();
+
+    }, 30*1000);
+
 });
 
 let helpNeedsData = [];
 function getAndShowHelpNeeds() {
+
+    console.log("Обновление меток");
     $.ajax({
         type: "GET",
         url: "https://localhost:44391/HelpDatas",
