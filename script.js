@@ -1,5 +1,14 @@
 ymaps.ready(init);
 
+$(document).ready(function(){
+
+    $('#map').css({
+        height: (window.screen.availHeight - 50) + 'px', 
+        width: window.screen.availWidth + 'px'
+    });
+
+});
+
 function init() {
     var myMap = new ymaps.Map("map", {
             center: [42.882004, 74.582748],
@@ -11,10 +20,10 @@ function init() {
         // Создаем геообъект с типом геометрии "Точка".
         myGeoObject = new ymaps.GeoObject({
             // Описание геометрии.
-            geometry: {
-                type: "Point",
-                coordinates: [42.882004, 74.582748]
-            },
+            // geometry: {
+            //     type: "Point",
+            //     coordinates: [42.882004, 74.582748]
+            // },
         });
         // myPieChart = new ymaps.Placemark([
         //     55.847, 37.6
