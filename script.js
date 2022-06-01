@@ -1,6 +1,11 @@
-ymaps.ready(init);
+
+
+var myMap;
+var myGeoObject;
 
 $(document).ready(function(){
+    
+    ymaps.ready(init);
 
     $('#map').css({
         height: (window.screen.availHeight - 50) + 'px', 
@@ -9,13 +14,39 @@ $(document).ready(function(){
 
 });
 
+function getHelp() {
+    getLocation();
+
+}
+
+function getLocation() {
+
+  if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+  }
+}
+
+function showPosition(position) {
+    console.log(position.coords.latitude + ", " + position.coords.longitude);
+    
+    myMap.geoObjects
+        .add(new ymaps.Placemark([position.coords.latitude, position.coords.longitude], {
+            iconContent: 'нужна помощь!',
+            balloonContent: 'пользователь не зарегистрирован'
+        }, {
+            preset: 'islands#redStretchyIcon',
+            iconColor: 'red'
+        }));
+}
+
 function init() {
-    var myMap = new ymaps.Map("map", {
+    
+        myMap = new ymaps.Map("map", {
             center: [42.882004, 74.582748],
-            zoom: 10
+            zoom: 14
         }, {
             searchControlProvider: 'yandex#search'
-        }),
+        });
 
         // Создаем геообъект с типом геометрии "Точка".
         myGeoObject = new ymaps.GeoObject({
@@ -52,13 +83,13 @@ function init() {
         //     iconPieChartCaptionMaxWidth: 200
         // });
 
-    myMap.geoObjects
-        .add(myGeoObject)
-        .add(new ymaps.Placemark([42.843318, 74.608349], {
-            iconContent: 'нужна помощь!',
-            balloonContent: 'пользователь не зарегистрирован'
-        }, {
-            preset: 'islands#redStretchyIcon',
-            iconColor: 'red'
-        }));
+    // myMap.geoObjects
+    //     .add(myGeoObject)
+    //     .add(new ymaps.Placemark([42.843318, 74.608349], {
+    //         iconContent: 'нужна помощь!',
+    //         balloonContent: 'пользователь не зарегистрирован'
+    //     }, {
+    //         preset: 'islands#redStretchyIcon',
+    //         iconColor: 'red'
+    //     }));
 }

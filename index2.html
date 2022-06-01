@@ -117,7 +117,7 @@
 					<h2 class="mb-3 mt-3">Вы в опасности? Нажмите на кнопку</h2>
 					
 					<div class="btn-container mb-3 d-flex justify-content-center">
-						<a href="appoinment.html" target="_blank" class="btn btn-main-2 btn-icon btn-round-full">Помогите!</a>
+						<a href="#mapDiv" onclick="getHelp()" class="btn btn-main-2 btn-icon btn-round-full">Помогите!</a>
 					</div>
 					<p class="mb-4 pr-5">Ваше местоположение отразится на карте и все пользователи сайта будут видеть что вы в опасности. 
 						Те кто рядом, придут вам на помощь. За это время вы должны потянуть время, если есть возможность бегите.
@@ -133,7 +133,7 @@
 
 <section class="features">
 	<div class="container">
-		<div class="row mb-5">
+		<div class="row mb-5" id="mapDiv">
 			<div id="map" style="width: 400px;height:400px"></div>
 		</div>
 		<div class="row">
