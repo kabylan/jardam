@@ -4,19 +4,91 @@ var myMap;
 var myGeoObject;
 
 $(document).ready(function(){
-    
+    moment.locale('ru'); 
     ymaps.ready(init);
 
     $('#map').css({
-        height: (window.screen.availHeight - 50) + 'px', 
+        height: (window.screen.availHeight - 150) + 'px', 
         width: window.screen.availWidth + 'px'
     });
 
 });
 
+let helpNeedsData = [];
+function getAndShowHelpNeeds() {
+    $.ajax({
+        type: "GET",
+        url: "https://localhost:44391/HelpDatas",
+        success: function (data) {
+
+            // createDateTime: "2022-06-01T22:36:52.3999775"
+            // lat: "112.00"
+            // long: "1223.00"
+            // userFirstName: "Куштар"
+            // userLastName: "Тимка"
+
+            data.forEach(m => {
+
+                let forWhom = m.userFirstName != null ? '<b>' + m.userFirstName + m.userLastName + '</b>': 
+                    '<span class="text-muted">Неизвестно кто</span>';
+                let balloonContent = "Вызов от: " +  forWhom;
+
+                balloonContent += "<br><b class='text-primary'>" + moment(m.createDateTime).fromNow() + "</b>";
+                balloonContent += "<br>" + moment(m.createDateTime).format('HH:mm DD.MM.YYYY ') ;
+
+                myMap.geoObjects
+                .add(new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
+                    iconContent: 'Нужна помощь! - ' + forWhom,
+                    balloonContent: balloonContent
+                }, {
+                    preset: 'islands#redStretchyIcon',
+                    iconColor: 'red'
+                }));
+            });
+
+    
+        },
+        // error: function (xhr, ajaxOptions, thrownError) {
+        //     console.log(xhr);
+            
+        // },
+        // complete: function (data) {
+        //     console.log(data);
+            
+        // }
+    });
+}
+
 function getHelp() {
     getLocation();
+}
 
+function sendLocation(lat, long) {
+    $.ajax({
+        type: "POST",
+        url: "https://localhost:44391/HelpDatas/Create",
+        data: {
+            Id : null,
+            CreateDateTime  : null,
+            Lat: lat + '',
+            Long: long + '',
+            UserID  : null,
+            User  : null 
+        },
+         
+        dataType: 'json',  
+        success: function (data) {
+            console.log(data);
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            console.log(xhr);
+            
+        },
+        complete: function (data) {
+            console.log(data);
+            
+        }
+    });
 }
 
 function getLocation() {
@@ -29,14 +101,18 @@ function getLocation() {
 function showPosition(position) {
     console.log(position.coords.latitude + ", " + position.coords.longitude);
     
-    myMap.geoObjects
-        .add(new ymaps.Placemark([position.coords.latitude, position.coords.longitude], {
-            iconContent: 'нужна помощь!',
-            balloonContent: 'пользователь не зарегистрирован'
-        }, {
-            preset: 'islands#redStretchyIcon',
-            iconColor: 'red'
-        }));
+    // myMap.geoObjects
+    //     .add(new ymaps.Placemark([position.coords.latitude, position.coords.longitude], {
+    //         iconContent: 'нужна помощь!',
+    //         balloonContent: 'пользователь не зарегистрирован'
+    //     }, {
+    //         preset: 'islands#redStretchyIcon',
+    //         iconColor: 'red'
+    //     }));
+
+    sendLocation(position.coords.latitude, position.coords.longitude);
+
+    getAndShowHelpNeeds();
 }
 
 function init() {
@@ -92,4 +168,7 @@ function init() {
     //         preset: 'islands#redStretchyIcon',
     //         iconColor: 'red'
     //     }));
+
+    getAndShowHelpNeeds();
+
 }
