@@ -1,7 +1,9 @@
 
+let helpNeedsData = [];
+let myMap;
+let myGeoObject;
 
-var myMap;
-var myGeoObject;
+let showBeforeHours = 12;
 
 $(document).ready(function(){
     moment.locale('ru'); 
@@ -12,18 +14,31 @@ $(document).ready(function(){
         width: window.screen.availWidth + 'px'
     });
 
-    var timerId = setTimeout(function tick(){
+    let timerId = setTimeout(function tick(){
 
         timerId = setTimeout(tick, 30*1000);
 
-        getAndShowHelpNeeds();
+        getThenShowHelpNeeds();
 
     }, 30*1000);
-
+    
+    elementsChanges();
 });
 
-let helpNeedsData = [];
-function getAndShowHelpNeeds() {
+
+function elementsChanges() {
+    
+    $('#timeToShowRange').on('input', function () {
+        $(this).trigger('change');
+        $('#timeToShowTxt').text($(this).val());
+
+        showBeforeHours = parseFloat($(this).val());
+    });
+
+    showHelpNeeds();
+}
+
+function getThenShowHelpNeeds() {
 
     console.log("Обновление меток");
     $.ajax({
@@ -31,31 +46,15 @@ function getAndShowHelpNeeds() {
         url: "https://localhost:44391/HelpDatas",
         success: function (data) {
 
+            helpNeedsData = data;
             // createDateTime: "2022-06-01T22:36:52.3999775"
             // lat: "112.00"
             // long: "1223.00"
             // userFirstName: "Куштар"
             // userLastName: "Тимка"
 
-            data.forEach(m => {
-
-                let forWhom = m.userFirstName != null ? '<b>' + m.userFirstName + m.userLastName + '</b>': 
-                    '<span class="text-muted">Неизвестно кто</span>';
-                let balloonContent = "Вызов от: " +  forWhom;
-
-                balloonContent += "<br><b class='text-primary'>" + moment(m.createDateTime).fromNow() + "</b>";
-                balloonContent += "<br>" + moment(m.createDateTime).format('HH:mm DD.MM.YYYY ') ;
-
-                myMap.geoObjects
-                .add(new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
-                    iconContent: 'Нужна помощь! - ' + forWhom,
-                    balloonContent: balloonContent
-                }, {
-                    preset: 'islands#redStretchyIcon',
-                    iconColor: 'red'
-                }));
-            });
-
+            
+            showHelpNeeds();
     
         },
         // error: function (xhr, ajaxOptions, thrownError) {
@@ -66,6 +65,42 @@ function getAndShowHelpNeeds() {
         //     console.log(data);
             
         // }
+    });
+}
+
+function showHelpNeeds() {
+
+    let data = helpNeedsData;
+
+    let halfAnHourAgo = moment().subtract(30, 'minutes').toDate().getTime();
+    let twelveHoursAgo = moment().subtract(showBeforeHours, 'hours').toDate().getTime();
+
+    data.forEach(m => {
+
+        // отображать метки не позднее 12 часов
+        if (moment(m.createDateTime) < twelveHoursAgo) return;
+
+        // метки до 30 минут красного цвета, если больше то серого цвета
+        let iconColor = moment(m.createDateTime) > halfAnHourAgo ? 'red' : 'grey'; 
+
+        // пользователь
+        let forWhom = m.userFirstName != null ? '<b>' + m.userFirstName + m.userLastName + '</b>': 
+            '<span class="text-muted">Неизвестно кто</span>';
+        let balloonContent = "Вызов от: " +  forWhom;
+
+        // время создания и сколько прошло
+        balloonContent += "<br><b class='text-primary'>" + moment(m.createDateTime).fromNow() + "</b>";
+        balloonContent += "<br>" + moment(m.createDateTime).format('HH:mm DD.MM.YYYY ') ;
+
+        // добавить метку на карте
+        myMap.geoObjects
+        .add(new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
+            iconContent: 'Нужна помощь! - ' + forWhom,
+            balloonContent: balloonContent
+        }, {
+            preset: `islands#${iconColor}StretchyIcon`,
+            iconColor: iconColor
+        }));
     });
 }
 
@@ -122,7 +157,7 @@ function showPosition(position) {
 
     sendLocation(position.coords.latitude, position.coords.longitude);
 
-    getAndShowHelpNeeds();
+    getThenShowHelpNeeds();
 }
 
 function init() {
@@ -179,6 +214,6 @@ function init() {
     //         iconColor: 'red'
     //     }));
 
-    getAndShowHelpNeeds();
+    getThenShowHelpNeeds();
 
 }
