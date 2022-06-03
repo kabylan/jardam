@@ -112,7 +112,7 @@ function showHelpNeeds() {
 
         // добавить метку на карте
         let placemark = new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
-            iconContent: 'Нужна помощь! - ' + forWhom,
+            iconContent:  `ID-${m.helpDataID}.Нужна помощь! ${forWhom}`,
             balloonContent: balloonContent
         }, {
             preset: `islands#${iconColor}StretchyIcon`,
