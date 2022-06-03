@@ -137,11 +137,15 @@
 		<div class="row mb-5" id="mapDiv">
 			<div id="map" style="width: 400px;height:400px"></div>
 		</div>
+
+		<div class="row mb-1 p-2">
+			<div>Количество меток: <span id="placemarkCount"></span></div>
+		</div>
 		
 		<div class="row mb-5 p-2">
 			<div>
-				<label for="customRange1" class="form-label">
-					Показать за <span id="timeToShowTxt">12</span> часов
+				<label for="timeToShowRange" class="form-label">
+					Показать за: <span id="timeToShowTxt">12</span> часов
 				</label><br>
 				<input type="range" class="form-range" value="12" min="1" max="24" id="timeToShowRange">
 			</div>

@@ -1,7 +1,10 @@
 
 let helpNeedsData = [];
+let helpNeedsActualData = [];
 let myMap;
 let myGeoObject;
+let placemarks = [];
+let polylines = [];
 
 let showBeforeHours = 12;
 
@@ -33,9 +36,12 @@ function elementsChanges() {
         $('#timeToShowTxt').text($(this).val());
 
         showBeforeHours = parseFloat($(this).val());
+
+        
+        showHelpNeeds();
+        drawPolylines();
     });
 
-    showHelpNeeds();
 }
 
 function getThenShowHelpNeeds() {
@@ -55,6 +61,7 @@ function getThenShowHelpNeeds() {
 
             
             showHelpNeeds();
+            drawPolylines();
     
         },
         // error: function (xhr, ajaxOptions, thrownError) {
@@ -69,19 +76,30 @@ function getThenShowHelpNeeds() {
 }
 
 function showHelpNeeds() {
+    
+    helpNeedsActualData = [];
+
+    // удалить все метки на карте
+    removeAllPlacemarks();
+
+    removeAllPolylines();
 
     let data = helpNeedsData;
 
     let halfAnHourAgo = moment().subtract(30, 'minutes').toDate().getTime();
     let twelveHoursAgo = moment().subtract(showBeforeHours, 'hours').toDate().getTime();
 
+    let countPlacemark = 0;
     data.forEach(m => {
 
         // отображать метки не позднее 12 часов
         if (moment(m.createDateTime) < twelveHoursAgo) return;
 
+        helpNeedsActualData.push(m);
+
+
         // метки до 30 минут красного цвета, если больше то серого цвета
-        let iconColor = moment(m.createDateTime) > halfAnHourAgo ? 'red' : 'grey'; 
+        let iconColor = moment(m.createDateTime) > halfAnHourAgo ? 'red' : 'grey';
 
         // пользователь
         let forWhom = m.userFirstName != null ? '<b>' + m.userFirstName + m.userLastName + '</b>': 
@@ -90,19 +108,95 @@ function showHelpNeeds() {
 
         // время создания и сколько прошло
         balloonContent += "<br><b class='text-primary'>" + moment(m.createDateTime).fromNow() + "</b>";
-        balloonContent += "<br>" + moment(m.createDateTime).format('HH:mm DD.MM.YYYY ') ;
+        balloonContent += "<br>" + moment(m.createDateTime).format('HH:mm DD.MM.YYYY ');
 
         // добавить метку на карте
-        myMap.geoObjects
-        .add(new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
+        let placemark = new ymaps.Placemark([parseFloat(m.lat), parseFloat(m.long)], {
             iconContent: 'Нужна помощь! - ' + forWhom,
             balloonContent: balloonContent
         }, {
             preset: `islands#${iconColor}StretchyIcon`,
             iconColor: iconColor
-        }));
+        });
+
+        placemarks.push(placemark);
+
+        myMap.geoObjects.add(placemark);
+        countPlacemark++;
+    });
+    $('#placemarkCount').text(countPlacemark);
+}
+
+function drawPolylines() {
+
+    
+    let usersIds = helpNeedsActualData.map(m => m.userID);    
+    let uniqUsersIds = [... new Set(usersIds)];
+
+    uniqUsersIds.forEach(u => {
+
+        // получить координаты одного пользователья
+        let coords = helpNeedsActualData.map(p => { 
+            if (p.userID == u) return [parseFloat(p.lat), parseFloat(p.long)]
+        });
+
+        // убрать undefined
+        coords = coords.filter(function( element ) {
+            return element !== undefined;
+        });
+
+        if (coords.length < 2) return;
+
+        // console.log(coords);
+
+        // Создаем ломаную с помощью вспомогательного класса Polyline.
+        var myPolyline = new ymaps.Polyline(
+            // Указываем координаты вершин ломаной.
+            coords
+        , {
+            // Описываем свойства геообъекта.
+            // Содержимое балуна.
+            balloonContent: "Ломаная линия"
+        }, {
+            // Задаем опции геообъекта.
+            // Отключаем кнопку закрытия балуна.
+            balloonCloseButton: false,
+            // Цвет линии.
+            strokeColor: "#000000",
+            // Ширина линии.
+            strokeWidth: 4,
+            // Коэффициент прозрачности.
+            strokeOpacity: 0.5
+        });
+
+        // Добавляем линии на карту.
+        myMap.geoObjects.add(myPolyline);
+
+
+        // добавить метку на карте чтобы знали конечную точку
+        let placemark = new ymaps.Placemark(coords[coords.length - 1], {
+        }, {
+            preset: 'islands#greenCircleDotIcon',
+            iconColor: 'green'
+        });
+        myMap.geoObjects.add(placemark);
+
+        placemarks.push(placemark);
+
+        polylines.push(myPolyline);
     });
 }
+
+function removeAllPlacemarks() {
+
+    placemarks.forEach(p => myMap.geoObjects.remove(p));
+}
+
+function removeAllPolylines() {
+
+    polylines.forEach(p => myMap.geoObjects.remove(p));
+}
+
 
 function getHelp() {
     getLocation();
